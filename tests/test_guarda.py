@@ -81,6 +81,22 @@ class TestGuarda(unittest.TestCase):
         self.assertTrue(os.path.isfile(
             os.path.join(self.tmp, "vault", "10 Espelho", "backlog.md")))
 
+    def test_restauracao_sem_residuo_nao_anuncia_limpeza(self):
+        # Mesma restauração do teste acima, mas aqui a geração não deixa
+        # nenhum arquivo não rastreado na zona reescrita: o `git checkout`
+        # já devolve a pasta ao estado commitado, e o `git clean` que roda
+        # depois não tem nada para remover. "Residuo removido" é uma alegação
+        # de trabalho feito — não pode aparecer quando o git clean não fez
+        # nada, mesmo saindo com código 0.
+        self._gerar_e_commitar()
+        os.remove(os.path.join(self.tmp, "fonte", "backlog.md"))
+        apoio.git(self.tmp, "add", "-A")
+        apoio.git(self.tmp, "commit", "-m", "fonte encolheu")
+        r = rodar(self.tmp)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("backlog.md", r.stdout)
+        self.assertNotIn("Residuo removido", r.stdout)
+
     def test_so_conferir_nao_gera(self):
         r = rodar(self.tmp, "--so-conferir")
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)

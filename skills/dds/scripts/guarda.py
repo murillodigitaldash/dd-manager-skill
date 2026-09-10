@@ -113,6 +113,11 @@ def conferir_depois(raiz, c):
         # proteger).
         # A limpeza é SEMPRE executada, mesmo se o apagado foi um diretório inteiro
         # (reportado como uma entrada só de diretório pelo git status).
+        # Código de saída 0 só diz que o comando não falhou — git clean sai 0
+        # tanto quando remove algo quanto quando não há nada para remover. A
+        # zona só entra em `limpas` (e só aparece "Residuo removido") quando o
+        # próprio git clean lista algo removido na saída (uma linha "Removing
+        # <caminho>" por item apagado).
         limpas = []
         for zona in c["zonas"]["reescrita"]:
             # Verifica existência contra a raiz (conferir_depois recebe raiz).
@@ -121,7 +126,7 @@ def conferir_depois(raiz, c):
             caminho_relativo = os.path.join(c["vault"], zona)
             if os.path.isdir(caminho_absoluto):
                 r = git(raiz, "clean", "-fd", "--", caminho_relativo)
-                if r.returncode == 0:
+                if r.returncode == 0 and r.stdout.strip():
                     limpas.append(zona)
         return falhar(
             "A geração apagou notas. O cérebro foi restaurado do git.",
