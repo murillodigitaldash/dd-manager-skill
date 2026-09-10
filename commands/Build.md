@@ -22,7 +22,7 @@ python3 "$CLAUDE_PLUGIN_ROOT/skills/dds/scripts/contrato.py"
 |---|---|
 | não há `.claude/dd.md` | **entrevistar** — passo 2, e depois o 3 |
 | há contrato, e o vault não existe ou tem zero nota | **construir** — passo 3 |
-| há contrato, o vault existe, mas falta zona semeada | **construir** — o passo 3 semeia o que falta. Leia o passo 5 antes |
+| há contrato, o vault existe, mas falta alguma pasta de `zonas.semeada` ou `zonas.livre` | **construir** — o passo 3 semeia o que falta. Leia o passo 5 antes |
 | há contrato e o vault está completo | **não construa.** Diga quantas notas tem e que regenerar é `/dds:End`, que já faz isso com guarda. Encerre aqui |
 
 O último caso não é falha do comando: é o comando fazendo o seu trabalho.
