@@ -1,0 +1,8 @@
+{
+  "name": "dds",
+  "version": "0.1.0",
+  "description": "Protocolo do cérebro: retrospecto por evidência, fila de execução e promoção do trabalho do dia para a fonte, em qualquer projeto que declare o contrato",
+  "author": { "name": "Murillo Azevedo", "email": "murillo@digitaldash.info" },
+  "repository": "https://github.com/murillodigitaldash/dd-manager-skill",
+  "keywords": ["cerebro", "obsidian", "gestao", "projetos", "documentacao"]
+}

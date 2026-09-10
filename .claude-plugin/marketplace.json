@@ -1,0 +1,14 @@
+{
+  "name": "dd-manager",
+  "owner": {
+    "name": "Digital Dash",
+    "email": "murillo@digitaldash.info"
+  },
+  "plugins": [
+    {
+      "name": "dds",
+      "source": "./",
+      "description": "Protocolo do cérebro: retrospecto, fila de execução e promoção para a fonte"
+    }
+  ]
+}
