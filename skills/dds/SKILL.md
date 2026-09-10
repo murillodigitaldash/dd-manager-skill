@@ -70,6 +70,14 @@ Os artefatos da DDS, que ela prescreve e o contrato pode sobrescrever:
 | Plano de trabalho | `<artefatos.planos>/AAAA-MM-DD-*.md` |
 | Spec | `<artefatos.specs>/AAAA-MM-DD-*.md` |
 
+Se os caminhos de `artefatos` caírem dentro da pasta que o gerador espelha —
+caso comum quando a documentação-fonte é `docs/` e os padrões acima também
+moram lá —, o diário, o ledger, os planos e as specs viram notas do vault
+também, como qualquer outro documento da fonte. Isso é aceitável: nenhum
+tratamento especial é necessário. Quem não quiser esse espelhamento
+sobrescreve `diario`, `planos` e `specs` no frontmatter do contrato, apontando
+para fora da fonte — a plugin já lê essas chaves de lá.
+
 ## A fila de execução
 
 Não existe um arquivo "fila". Ela se lê cruzando quatro coisas, nesta ordem de

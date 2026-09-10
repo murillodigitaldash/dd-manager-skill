@@ -47,6 +47,14 @@ real; pergunte em texto quando a resposta for um caminho.
 4. **Como se chama a pasta espelhada dentro do vault?** Padrão
    `10 Documentos`.
 
+Depois de saber onde mora a fonte (item 1), confira se os caminhos padrão de
+`artefatos` (`docs/superpowers/execucao`, `docs/superpowers/plans`,
+`docs/superpowers/specs`) caem dentro dela — caso comum quando a resposta do
+item 1 é `docs/`. Se caírem, diga isso ao usuário numa linha e ofereça as duas
+saídas: aceitar que diário e planos virem notas do vault também, ou declarar
+`diario`, `planos` e `specs` no frontmatter do contrato, apontando para fora
+da fonte.
+
 Então escreva as duas peças:
 
 **O gerador**, copiado do esqueleto e com as quatro constantes preenchidas:
@@ -143,8 +151,15 @@ Nesta forma, sem preâmbulo e sem fechamento:
 Uma linha: qual dos quatro casos do passo 1, e por quê.
 
 ## Construído
-Contagem por zona — reescritas, semeadas, preservadas — e o total. Se nada foi
-construído porque o cérebro já existia, um bullet dizendo isso.
+Contagem por zona. Para cada nome em `zonas.reescrita`, `zonas.semeada` e
+`zonas.livre` do contrato, some as notas com:
+
+```sh
+find "<vault>/<zona>" -name '*.md' -not -path '*/.obsidian/*' | wc -l
+```
+
+Reporte os três totais (reescrita, semeada, livre) e a soma dos três. Se nada
+foi construído porque o cérebro já existia, um bullet dizendo isso.
 
 ## Verificação
 O que o `--verificar` respondeu, em uma linha.
