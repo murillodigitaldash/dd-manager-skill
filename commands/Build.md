@@ -35,15 +35,75 @@ find "<vault>" -name '*.md' -not -path '*/.obsidian/*' | wc -l
 
 ### 2. Entrevistar, quando não há contrato
 
-Quatro perguntas, e só elas. Use `AskUserQuestion` quando houver alternativa
-real; pergunte em texto quando a resposta for um caminho.
+Quatro perguntas no caminho normal. Use `AskUserQuestion` quando houver
+alternativa real; pergunte em texto quando a resposta for um caminho ou uma
+resposta aberta.
 
-1. **Onde está a documentação-fonte?** Uma pasta de Markdown. Se o projeto não
-   tiver nenhuma, **pare aqui**: espelho sem objeto não reflete nada, e o
-   conserto é escrever documentação, não gerar um vault vazio.
+1. **Onde está a documentação-fonte?** Uma pasta de Markdown.
+
+   Se o projeto já tem alguma, essa pasta é `FONTE` — siga para a pergunta 2.
+
+   Se **não tiver nenhuma**, o comando não para mais aqui. Confirme com o
+   usuário, em texto, a pasta onde a documentação vai passar a morar — padrão
+   `docs/` — e essa pasta confirmada também é `FONTE`. Antes de seguir para a
+   pergunta 2, semeie essa fonte: três perguntas sobre o **projeto**, não
+   sobre caminhos, e como são respostas abertas, pergunte em texto, e não com
+   `AskUserQuestion`:
+
+   a. Do que se trata o projeto, e que problema ele resolve?
+   b. O que já está decidido ou já existe?
+   c. O que ainda está em aberto?
+
+   <!--
+     O documento desta semeadura nasce dentro de FONTE — a pasta-fonte que
+     acabou de ser confirmada — e NUNCA dentro do vault. Isto não é estilo,
+     é a regra que organiza a plugin inteira: a zona espelho é apagada e
+     reescrita a cada geração, e um documento escrito ali não existe na
+     fonte para ser recriado — a próxima geração o apaga sem avisar. Se este
+     comentário for removido por parecer "simplificação", o próximo
+     /dds:Build ou /dds:End apaga o trabalho de quem escreveu aqui.
+   -->
+
+   Com as respostas, escreva **um** documento Markdown dentro de `FONTE`
+   (crie a pasta se ela ainda não existir). O documento é feito das
+   respostas do usuário — nunca invente conteúdo no lugar dele. Se ele não
+   responder uma das três, a seção correspondente fica só com a linha "Em
+   aberto — ainda não respondido.":
+
+   ```markdown
+   # <título combinado com o usuário>
+
+   ## Do que se trata
+
+   <resposta a, ou "Em aberto — ainda não respondido.">
+
+   ## O que já existe
+
+   <resposta b, ou "Em aberto — ainda não respondido.">
+
+   ## O que está em aberto
+
+   <resposta c, ou "Em aberto — ainda não respondido.">
+
+   ## Próximos passos
+
+   Continue escrevendo aqui, na fonte, e regenere — nunca no vault: a zona
+   espelho é apagada e reescrita a cada geração.
+   ```
+
+   Um projeto que entra nesta pergunta sem documentação nenhuma sai dela com
+   uma fonte de uma nota — e, depois dos passos 3 e 4, com um cérebro de uma
+   nota. É o começo certo, não um vault vazio.
+
 2. **Onde o vault deve nascer?** Padrão `cerebro/`.
-3. **Que documento é pré-requisito?** Sem ele, gerar produziria um cérebro que
-   *parece* completo. Pode ser a própria pasta do item 1.
+3. **Que documento nomeado é pré-requisito?** Não a pasta do item 1 inteira —
+   um arquivo específico, sem o qual o cérebro enganaria: pareceria completo
+   sem ser. Se genuinamente não houver nenhum documento assim, a resposta é
+   **"nenhum"**, dita explicitamente — não a pasta do item 1 repetida, que
+   responde sem decidir nada. O custo de cada escolha: nomear um documento
+   faz o passo 3 recusar gerar enquanto ele não existir; responder "nenhum"
+   abre mão dessa checagem, e uma fonte incompleta vai gerar um vault que
+   *parece* completo, sem que nada avise.
 4. **Como se chama a pasta espelhada dentro do vault?** Padrão
    `10 Documentos`.
 
@@ -90,6 +150,32 @@ python3 "$CLAUDE_PLUGIN_ROOT/skills/dds/scripts/contrato.py"
 
 Se `origem_zonas` vier `"escape"`, algo está errado com o gerador recém-escrito
 — investigue em vez de aceitar.
+
+Isso não basta. Quando as respostas da entrevista coincidem com os padrões do
+esqueleto, o bloco `# ── configuração ──` pode nunca ter sido editado de fato
+e o contrato resolve assim mesmo, por coincidência. Se as respostas
+divergirem dos padrões e a edição for esquecida, o erro só aparece muito
+depois, como espelho vazio — e uma conferência que só olha `origem_zonas` não
+pega este caso, porque `origem_zonas` só denuncia gerador que não responde
+`--contrato`, não gerador que responde errado.
+
+Compare, campo a campo, o que o contrato devolveu contra as respostas desta
+entrevista:
+
+| Campo do contrato | Tem que bater com |
+|---|---|
+| `fonte.documentos` | `FONTE` — resposta 1 (ou a pasta confirmada na semeadura) |
+| `vault` (raiz do JSON) | `VAULT` — resposta 2, o mesmo valor escrito em `.claude/dd.md` |
+| `fonte.questoes`, antes de `/70 Decisões em aberto` | `VAULT` — resposta 2 de novo, mas vazando do gerador, não do frontmatter |
+| `zonas.reescrita[0]` | `ZONA_ESPELHO` — resposta 4 |
+
+As duas linhas de `VAULT` conferem coisas diferentes: `vault` vem do
+`.claude/dd.md` que você acabou de escrever, e `fonte.questoes` vaza do
+`VAULT` de dentro do gerador. Se uma bater e a outra não, o defeito está
+localizado — um dos dois arquivos ficou com o valor errado.
+
+Se algum campo divergir, **pare** e nomeie o campo e a divergência: o valor
+que o contrato devolveu contra o que a entrevista pediu.
 
 ### 3. Conferir a fonte e gerar
 
@@ -141,7 +227,8 @@ docs(cerebro): construir o cerebro a partir da fonte
 <corpo: quantas notas, e o que a fonte tinha que permitiu gera-las>
 ```
 
-Inclua o vault, `.claude/dd.md` e o gerador, se a entrevista os criou.
+Inclua o vault, `.claude/dd.md`, o gerador e o documento de semeadura
+escrito na fonte pela pergunta 1, se a entrevista os criou.
 
 ### 7. Devolver o resumo
 
