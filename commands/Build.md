@@ -46,13 +46,16 @@ resposta aberta.
    Se **não tiver nenhuma**, o comando não para mais aqui. Confirme com o
    usuário, em texto, a pasta onde a documentação vai passar a morar — padrão
    `docs/` — e essa pasta confirmada também é `FONTE`. Antes de seguir para a
-   pergunta 2, semeie essa fonte: três perguntas sobre o **projeto**, não
-   sobre caminhos, e como são respostas abertas, pergunte em texto, e não com
-   `AskUserQuestion`:
+   pergunta 2, semeie essa fonte: quatro perguntas sobre o **projeto**, não
+   sobre caminhos, no mesmo turno — e como são respostas abertas, pergunte em
+   texto, e não com `AskUserQuestion`:
 
-   a. Do que se trata o projeto, e que problema ele resolve?
-   b. O que já está decidido ou já existe?
-   c. O que ainda está em aberto?
+   a. Como se chama o projeto (ou este documento), numa frase curta? Vira o
+      título do documento — sem essa pergunta, nada nas outras três dá nome
+      a coisa nenhuma.
+   b. Do que se trata o projeto, e que problema ele resolve?
+   c. O que já está decidido ou já existe?
+   d. O que ainda está em aberto?
 
    <!--
      O documento desta semeadura nasce dentro de FONTE — a pasta-fonte que
@@ -64,26 +67,28 @@ resposta aberta.
      /dds:Build ou /dds:End apaga o trabalho de quem escreveu aqui.
    -->
 
-   Com as respostas, escreva **um** documento Markdown dentro de `FONTE`
-   (crie a pasta se ela ainda não existir). O documento é feito das
-   respostas do usuário — nunca invente conteúdo no lugar dele. Se ele não
-   responder uma das três, a seção correspondente fica só com a linha "Em
-   aberto — ainda não respondido.":
+   Com as respostas, escreva **um** documento Markdown, sempre em
+   `FONTE/visao-geral.md` (crie a pasta se ela ainda não existir) — o nome é
+   fixo, não uma escolha do agente, para que duas execuções deste mesmo
+   passo produzam o mesmo caminho. O documento é feito das respostas do
+   usuário — nunca invente conteúdo no lugar dele. Se ele não responder uma
+   das quatro, a seção (ou o título, no caso da pergunta a) correspondente
+   fica só com a linha "Em aberto — ainda não respondido.":
 
    ```markdown
-   # <título combinado com o usuário>
+   # <resposta a, ou "Em aberto — ainda não respondido.">
 
    ## Do que se trata
 
-   <resposta a, ou "Em aberto — ainda não respondido.">
+   <resposta b, ou "Em aberto — ainda não respondido.">
 
    ## O que já existe
 
-   <resposta b, ou "Em aberto — ainda não respondido.">
+   <resposta c, ou "Em aberto — ainda não respondido.">
 
    ## O que está em aberto
 
-   <resposta c, ou "Em aberto — ainda não respondido.">
+   <resposta d, ou "Em aberto — ainda não respondido.">
 
    ## Próximos passos
 
@@ -92,8 +97,10 @@ resposta aberta.
    ```
 
    Um projeto que entra nesta pergunta sem documentação nenhuma sai dela com
-   uma fonte de uma nota — e, depois dos passos 3 e 4, com um cérebro de uma
-   nota. É o começo certo, não um vault vazio.
+   uma fonte de uma nota (`visao-geral.md`) — e, depois dos passos 3 e 4, com
+   um cérebro de duas notas: a nota espelhada e o `Índice.md` que a zona
+   semeada sempre ganha (`semear()` o escreve de qualquer forma). É o começo
+   certo, não um vault vazio.
 
 2. **Onde o vault deve nascer?** Padrão `cerebro/`.
 3. **Que documento nomeado é pré-requisito?** Não a pasta do item 1 inteira —
@@ -168,16 +175,38 @@ entrevista:
 | `vault` (raiz do JSON) | `VAULT` — resposta 2, o mesmo valor escrito em `.claude/dd.md` |
 | `fonte.questoes`, antes de `/70 Decisões em aberto` | `VAULT` — resposta 2 de novo, mas vazando do gerador, não do frontmatter |
 | `zonas.reescrita[0]` | `ZONA_ESPELHO` — resposta 4 |
+| `prerequisitos` | `PREREQUISITOS` — resposta 3: a lista com o documento nomeado, ou lista vazia se a resposta foi "nenhum" — **nunca** a pasta do item 1, mesmo que o esqueleto tenha vindo assim |
 
 As duas linhas de `VAULT` conferem coisas diferentes: `vault` vem do
 `.claude/dd.md` que você acabou de escrever, e `fonte.questoes` vaza do
 `VAULT` de dentro do gerador. Se uma bater e a outra não, o defeito está
 localizado — um dos dois arquivos ficou com o valor errado.
 
+A linha de `prerequisitos` merece atenção à parte: o esqueleto vem com
+`PREREQUISITOS = ["docs"]` por padrão — a própria pasta do item 1. Se a
+pergunta 3 recebeu um documento nomeado, ou "nenhum" como resposta
+explícita, e ninguém editar essa constante, o contrato continua devolvendo
+`["docs"]`: a pasta existe, o passo 3 passa, e a resposta do usuário foi
+descartada em silêncio — exatamente o "funciona por coincidência" que esta
+conferência existe para pegar, e exatamente o "responde sem decidir nada"
+que a pergunta 3 foi reescrita para evitar.
+
 Se algum campo divergir, **pare** e nomeie o campo e a divergência: o valor
 que o contrato devolveu contra o que a entrevista pediu.
 
 ### 3. Conferir a fonte e gerar
+
+Antes de tudo, confirme que há repositório git:
+
+```sh
+git rev-parse --git-dir
+```
+
+Se falhar, **pare** e diga ao usuário para inicializar o git antes de
+construir — não gere nada. As duas guardas de `guarda.py` leem `git status`
+para decidir se recusam; fora de um repositório, `git status` volta vazio, as
+duas guardas passam sem conferir nada, e o problema só apareceria no commit
+do passo 6, tarde demais para evitar uma geração sem rede de segurança.
 
 Confira que **cada** caminho de `prerequisitos` existe. Se algum faltar, pare.
 Diga o que falta e não gere nada: sem fonte, não há o que espelhar, e um cérebro
