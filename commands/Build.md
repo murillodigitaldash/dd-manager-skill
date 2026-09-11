@@ -41,12 +41,12 @@ resposta aberta.
 
 1. **Onde está a documentação-fonte?** Uma pasta de Markdown.
 
-   Se o projeto já tem alguma, essa pasta é `FONTE` — siga para a pergunta 2.
+   Se o projeto já tem alguma, essa pasta é `FONTE`.
 
    Se **não tiver nenhuma**, o comando não para mais aqui. Confirme com o
    usuário, em texto, a pasta onde a documentação vai passar a morar — padrão
-   `docs/` — e essa pasta confirmada também é `FONTE`. Antes de seguir para a
-   pergunta 2, semeie essa fonte: quatro perguntas sobre o **projeto**, não
+   `docs/` — e essa pasta confirmada também é `FONTE`. Antes de seguir
+   adiante, semeie essa fonte: quatro perguntas sobre o **projeto**, não
    sobre caminhos, no mesmo turno — e como são respostas abertas, pergunte em
    texto, e não com `AskUserQuestion`:
 
@@ -103,20 +103,21 @@ resposta aberta.
    reescrita é apagada e reescrita a cada geração.
    ```
 
-   Um projeto que entra nesta pergunta sem documentação nenhuma sai dela com
-   uma fonte de três notas (`visao-geral.md`, `backlog.md`,
-   `adrs/indice.md`, semeados a seguir) — e, depois dos passos 3 e 4, com um
-   cérebro de quatro notas: as três espelhadas e o `Índice.md` que a zona
-   semeada sempre ganha (`semear()` o escreve de qualquer forma). É o começo
-   certo, não um vault vazio.
+   Um projeto que entra nesta pergunta sem documentação nenhuma sai deste
+   ramo com uma fonte de uma nota (`visao-geral.md`) — ou nenhuma nota nova,
+   se ele já existia e foi preservado. O resto da semeadura é comum aos dois
+   ramos desta pergunta e vem a seguir, antes de passar para a pergunta 2.
 
-   Semeie também `backlog.md` e `adrs/indice.md`, sempre dentro de `FONTE` —
-   com documentação prévia ou sem ela — e nunca no vault, pela mesma razão
-   de `visao-geral.md`: a zona reescrita é apagada e reescrita a cada geração.
-   São os destinos que `fonte.backlog` e `fonte.indice_adrs` declaram desde
-   já no gerador (passo seguinte); sem eles, o primeiro `/dds:Status` do
-   projeto encontra backlog ilegível, e a primeira promoção do `/dds:End`
-   não tem onde escrever.
+   **Semeie `backlog.md` e `adrs/indice.md` sempre, nos dois ramos acima —
+   com documentação prévia ou sem ela.** Isto não é exclusivo de quem chegou
+   sem documentação: com `FONTE` já determinada, por qualquer um dos dois
+   caminhos, os dois arquivos nascem dentro dela, nunca no vault, pela mesma
+   razão de `visao-geral.md` — a zona reescrita é apagada e reescrita a cada
+   geração. São os destinos que `fonte.backlog` e `fonte.indice_adrs`
+   declaram desde já no gerador (passo seguinte); sem eles, o primeiro
+   `/dds:Status` de **qualquer** projeto encontra backlog ilegível, e a
+   primeira promoção do `/dds:End` não tem onde escrever — não só no
+   projeto que chegou sem documentação nenhuma.
 
    **A semeadura nunca sobrescreve.** É a mesma arma carregada que o
    `--semear` do gerador existe para travar (passo 5) — o que é do usuário
@@ -161,6 +162,8 @@ resposta aberta.
 
    Contador: 0
    ```
+
+   Só então siga para a pergunta 2 — os dois ramos acima convergem aqui.
 
 2. **Onde o vault deve nascer?** Padrão `cerebro/`.
 3. **Que documento nomeado é pré-requisito?** Não a pasta do item 1 inteira —
@@ -302,8 +305,12 @@ Se der erro aqui, o vault **já foi gerado** pelo passo 3 e ainda não foi
 commitado — pare, mas não deixe o projeto nesse estado sem dizer o que fazer.
 Duas saídas, e a decisão é do usuário: corrigir a fonte e rodar a guarda de
 novo (passo 3), ou commitar o que já nasceu e corrigir depois. O que não vale
-é parar calado: um vault gerado e não rastreado faz a guarda ver `??` como
-sujeira e recusar **toda** regeneração seguinte, mesmo por uma nota vazia.
+é parar calado: um vault gerado e não commitado não é pendência visível para
+ninguém — o passo 1 deste mesmo comando decide pela existência de notas e
+pastas, não por commit, e uma próxima execução leria esse vault como
+completo e diria para não construir, escondendo o erro de verificação que
+nunca foi corrigido. Enquanto isso, o conteúdo inteiro nunca chegou a ser
+commitado — está a um `git clean` de sumir sem deixar rastro.
 
 Confirme também que as pastas de `zonas.semeada` e `zonas.livre` existem — são
 as que fazem o vault ser do usuário, e não do gerador.
@@ -353,22 +360,28 @@ Reporte os três totais (reescrita, semeada, livre) e a soma dos três. Se nada
 foi construído porque o cérebro já existia, um bullet dizendo isso.
 
 ## O que foi semeado
-Só se o passo 2 criou ou preservou algum arquivo. Um bullet por arquivo
-criado, dizendo para que serve e onde a pessoa escreve daqui em diante:
+Só se o passo 2 tocou algum dos três arquivos. Um bullet por arquivo
+tocado, e cada bullet **declara qual dos dois aconteceu** — criado ou
+preservado — nunca uma frase que sirva igual para os dois, porque anunciar
+como criado o que só foi preservado é falso:
 
-- `visao-geral.md` — o retrato inicial do projeto; edite direto, na fonte.
-- `backlog.md` — a fila de execução sai daqui: abra uma seção de fase, some
-  itens à tabela, feche o que foi entregue em `### Execução`.
-- `adrs/indice.md` — toda decisão arquitetural vira um arquivo novo em
-  `adrs/`, listado e contado aqui.
-- `70 Decisões em aberto`, no vault — zona semeada: questão em aberto mora
-  ali, e se edita direto, sem passar pela fonte.
+- `visao-geral.md`, **criado** — o retrato inicial do projeto; edite
+  direto, na fonte. *Ou* `visao-geral.md`, **preservado** — já existia, não
+  foi tocado.
+- `backlog.md`, **criado** — nasceu com a estrutura vazia; a fila de
+  execução sai daqui: abra uma seção de fase, some itens à tabela, feche o
+  que foi entregue em `### Execução`. *Ou* `backlog.md`, **preservado** — já
+  existia; diga também se a estrutura bateu com o que o protocolo lê, e o
+  que falta se não bateu.
+- `adrs/indice.md`, **criado** ou **preservado** — mesma regra do backlog.
+  Toda decisão arquitetural vira um arquivo novo em `adrs/`, listado e
+  contado aqui.
 
-Se algum dos três já existia e foi preservado em vez de criado, um bullet
-à parte por arquivo, dizendo que já existia e por isso não foi tocado — e,
-se a estrutura dele não bateu com o que o protocolo lê, o que falta.
+Se a zona semeada de questões (`70 Decisões em aberto`, no vault) nasceu
+nesta execução, mais um bullet: questão em aberto mora ali, e se edita
+direto, sem passar pela fonte.
 
-Se nada foi semeado nem preservado nesta execução, pule esta seção.
+Se nada foi criado nem preservado nesta execução, pule esta seção.
 
 ## Verificação
 O que o `--verificar` respondeu, em uma linha.
