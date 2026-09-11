@@ -81,6 +81,22 @@ class TestGuarda(unittest.TestCase):
         self.assertTrue(os.path.isfile(
             os.path.join(self.tmp, "vault", "10 Espelho", "backlog.md")))
 
+    def test_restauracao_nomeia_as_duas_causas_possiveis(self):
+        # A nota que some pode ter duas causas — fonte incompleta, ou remoção
+        # de propósito — e a mensagem precisa nomear as duas em vez de supor
+        # sempre a primeira (conselho invertido quando a remoção foi
+        # intencional: devolver desfaria o que o usuário quis).
+        self._gerar_e_commitar()
+        os.remove(os.path.join(self.tmp, "fonte", "backlog.md"))
+        apoio.git(self.tmp, "add", "-A")
+        apoio.git(self.tmp, "commit", "-m", "fonte encolheu")
+        r = rodar(self.tmp)
+        self.assertEqual(r.returncode, 1)
+        saida = r.stdout + r.stderr
+        self.assertIn("fonte", saida.lower())
+        self.assertIn("propósito", saida.lower())
+        self.assertIn("commit", saida.lower())
+
     def test_restauracao_sem_residuo_nao_anuncia_limpeza(self):
         # Mesma restauração do teste acima, mas aqui a geração não deixa
         # nenhum arquivo não rastreado na zona reescrita: o `git checkout`

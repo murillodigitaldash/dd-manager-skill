@@ -132,8 +132,12 @@ def conferir_depois(raiz, c):
             "A geração apagou notas. O cérebro foi restaurado do git.",
             ["Restaurado: %s" % a for a in apagados] +
             (["Residuo removido: %s" % z for z in limpas] if limpas else []),
-            "Essas notas existem no vault e não na fonte. Devolva cada uma à\n"
-            "fonte que a produz e rode de novo.")
+            "Essas notas existem no vault e não na fonte. Duas causas possíveis,\n"
+            "e o conserto depende de qual é a sua:\n"
+            "  - a fonte está incompleta — devolva cada nota à fonte que a\n"
+            "    produz e rode de novo;\n"
+            "  - o documento foi removido de propósito — nesse caso devolvê-lo\n"
+            "    desfaria a remoção. Commite a remoção do vault e rode de novo.")
     return 0
 
 

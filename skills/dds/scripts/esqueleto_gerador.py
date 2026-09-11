@@ -39,14 +39,24 @@ import sys
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ── configuração ────────────────────────────────────────────────────────────
-# O /dds:Build preenche estas quatro pela entrevista.
+# O /dds:Build preenche as quatro primeiras pela entrevista. As três
+# seguintes derivam de FONTE — o padrão já é o destino certo, e só precisam
+# de outro valor se o projeto já guardar backlog ou ADRs em outro lugar.
 FONTE = "docs"                    # pasta da documentação-fonte
 VAULT = "cerebro"                 # onde o vault nasce
-ZONA_ESPELHO = "10 Documentos"    # a pasta reescrita, dentro do vault
+ZONA_ESPELHO = "10 Documentos"    # a zona reescrita, dentro do vault — o
+                                   # nome da constante é histórico; a zona em
+                                   # si se chama zonas.reescrita
 PREREQUISITOS = ["docs"]          # sem isto não há o que espelhar
+
+BACKLOG = os.path.join(FONTE, "backlog.md")             # fila de execução
+ADRS = os.path.join(FONTE, "adrs")                       # uma decisão por arquivo
+INDICE_ADRS = os.path.join(FONTE, "adrs", "indice.md")   # índice e contador
 # ────────────────────────────────────────────────────────────────────────────
 
-ZONA_SEMEADA = ["00 Mapas", "70 Decisões em aberto"]
+ZONA_MAPAS = "00 Mapas"
+ZONA_QUESTOES = "70 Decisões em aberto"
+ZONA_SEMEADA = [ZONA_MAPAS, ZONA_QUESTOES]
 ZONA_LIVRE = ["90 Notas"]
 
 CONTRATO = {
@@ -54,7 +64,10 @@ CONTRATO = {
               "semeada": list(ZONA_SEMEADA),
               "livre": list(ZONA_LIVRE)},
     "fonte": {"documentos": FONTE,
-              "questoes": os.path.join(VAULT, "70 Decisões em aberto")},
+              "questoes": os.path.join(VAULT, ZONA_QUESTOES),
+              "backlog": BACKLOG,
+              "adrs": ADRS,
+              "indice_adrs": INDICE_ADRS},
     "prerequisitos": list(PREREQUISITOS),
 }
 
@@ -98,7 +111,7 @@ def semear(forcar=False):
                   "Se uma nota sumiu, o conserto é devolvê-la à fonte.\n")
             return 1
         os.makedirs(destino, exist_ok=True)
-    indice = caminho(VAULT, "00 Mapas", "Índice.md")
+    indice = caminho(VAULT, ZONA_MAPAS, "Índice.md")
     if not os.path.exists(indice):
         with open(indice, "w", encoding="utf-8") as f:
             f.write("# Índice\n\nMapa do cérebro. Esta nota é sua — o gerador\n"

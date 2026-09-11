@@ -54,6 +54,12 @@ python3 "$CLAUDE_PLUGIN_ROOT/skills/dds/scripts/guarda.py"
 Se ela recusar, ela diz o motivo e o conserto. Faça o conserto e rode de novo.
 Nunca chame o gerador direto para contornar a guarda.
 
+Se a recusa for por nota apagada na regeneração, há duas causas possíveis, e
+a guarda nomeia as duas — não assuma sempre a primeira: a fonte pode estar
+incompleta (devolva a nota à fonte que a produz e rode de novo), ou o
+documento pode ter sido removido de propósito (aí devolvê-lo desfaria a
+remoção — commite a remoção do vault e rode de novo).
+
 ### 5. Commitar
 
 Um commit, mensagem em português no padrão do repositório:

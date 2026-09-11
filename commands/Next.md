@@ -33,5 +33,9 @@ Ao confirmar, roteie para o caminho certo em vez de improvisar:
 - item sem plano → `superpowers:brainstorming`, depois `superpowers:writing-plans`
 - bug ou teste falhando → `superpowers:systematic-debugging`
 
+`superpowers` é recomendada, não obrigatória — se a skill de roteamento não
+estiver disponível no projeto, não invoque uma skill inexistente: apresente o
+item como acima e devolva a decisão de como tocá-lo ao usuário, em texto.
+
 Não escreva no cérebro. Registrar o que foi feito é trabalho do `/dds:Save` e do
 `/dds:End`.
