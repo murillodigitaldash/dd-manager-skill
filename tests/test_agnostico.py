@@ -60,10 +60,11 @@ CAMINHO_ABSOLUTO = re.compile(
 # Formas de nome de arquivo `.md` que a própria DDS usa hoje, levantadas
 # varrendo skills/ e commands/. Qualquer outro literal `.md` num arquivo do
 # plugin é, por eliminação, específico de um projeto — não desta plugin.
-# `visao-geral.md` é o nome fixo do documento de semeadura que /dds:Build
-# escreve quando entrevista um projeto sem documentação nenhuma (ver
-# commands/Build.md, passo 2): é convenção da própria DDS, não de um
-# projeto — por isso entra na lista, e não é exceção a ela.
+# `visao-geral.md`, `backlog.md` e `indice.md` (dentro de `adrs/`) são os
+# nomes fixos dos arquivos de semeadura que /dds:Build escreve na entrevista
+# (ver commands/Build.md, passo 2, e skills/dds/scripts/esqueleto_gerador.py):
+# convenção da própria DDS, não de um projeto — por isso entram na lista, e
+# não são exceção a ela.
 ALLOWLIST_MD = frozenset([
     "dd.md",
     "AAAA-MM-DD-sessao.md",
@@ -71,6 +72,8 @@ ALLOWLIST_MD = frozenset([
     "*-sessao.md",
     "AAAA-MM-DD-<fase>-<plano>-ledger.md",
     "*.md",
+    "backlog.md",
+    "indice.md",
     "Índice.md",
     "visao-geral.md",
 ])

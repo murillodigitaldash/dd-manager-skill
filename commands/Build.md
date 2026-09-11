@@ -41,12 +41,12 @@ resposta aberta.
 
 1. **Onde está a documentação-fonte?** Uma pasta de Markdown.
 
-   Se o projeto já tem alguma, essa pasta é `FONTE` — siga para a pergunta 2.
+   Se o projeto já tem alguma, essa pasta é `FONTE`.
 
    Se **não tiver nenhuma**, o comando não para mais aqui. Confirme com o
    usuário, em texto, a pasta onde a documentação vai passar a morar — padrão
-   `docs/` — e essa pasta confirmada também é `FONTE`. Antes de seguir para a
-   pergunta 2, semeie essa fonte: quatro perguntas sobre o **projeto**, não
+   `docs/` — e essa pasta confirmada também é `FONTE`. Antes de seguir
+   adiante, semeie essa fonte: quatro perguntas sobre o **projeto**, não
    sobre caminhos, no mesmo turno — e como são respostas abertas, pergunte em
    texto, e não com `AskUserQuestion`:
 
@@ -60,14 +60,21 @@ resposta aberta.
    <!--
      O documento desta semeadura nasce dentro de FONTE — a pasta-fonte que
      acabou de ser confirmada — e NUNCA dentro do vault. Isto não é estilo,
-     é a regra que organiza a plugin inteira: a zona espelho é apagada e
+     é a regra que organiza a plugin inteira: a zona reescrita é apagada e
      reescrita a cada geração, e um documento escrito ali não existe na
      fonte para ser recriado — a próxima geração o apaga sem avisar. Se este
      comentário for removido por parecer "simplificação", o próximo
      /dds:Build ou /dds:End apaga o trabalho de quem escreveu aqui.
    -->
 
-   Com as respostas, escreva **um** documento Markdown, sempre em
+   Antes de escrever, confira se `FONTE/visao-geral.md` já existe. Se
+   existir, **não toque** — pode ser de uma execução anterior deste mesmo
+   passo, ou o usuário pode tê-lo criado à mão entre uma pergunta e outra —
+   e semear por cima seria perdê-lo, na pior hora possível: a primeira vez
+   que a pessoa roda a plugin. Diga, numa linha, que preservou o arquivo e
+   por quê, e siga sem escrever nele.
+
+   Só quando ele não existir, escreva **um** documento Markdown, sempre em
    `FONTE/visao-geral.md` (crie a pasta se ela ainda não existir) — o nome é
    fixo, não uma escolha do agente, para que duas execuções deste mesmo
    passo produzam o mesmo caminho. O documento é feito das respostas do
@@ -93,14 +100,70 @@ resposta aberta.
    ## Próximos passos
 
    Continue escrevendo aqui, na fonte, e regenere — nunca no vault: a zona
-   espelho é apagada e reescrita a cada geração.
+   reescrita é apagada e reescrita a cada geração.
    ```
 
-   Um projeto que entra nesta pergunta sem documentação nenhuma sai dela com
-   uma fonte de uma nota (`visao-geral.md`) — e, depois dos passos 3 e 4, com
-   um cérebro de duas notas: a nota espelhada e o `Índice.md` que a zona
-   semeada sempre ganha (`semear()` o escreve de qualquer forma). É o começo
-   certo, não um vault vazio.
+   Um projeto que entra nesta pergunta sem documentação nenhuma sai deste
+   ramo com uma fonte de uma nota (`visao-geral.md`) — ou nenhuma nota nova,
+   se ele já existia e foi preservado. O resto da semeadura é comum aos dois
+   ramos desta pergunta e vem a seguir, antes de passar para a pergunta 2.
+
+   **Semeie `backlog.md` e `adrs/indice.md` sempre, nos dois ramos acima —
+   com documentação prévia ou sem ela.** Isto não é exclusivo de quem chegou
+   sem documentação: com `FONTE` já determinada, por qualquer um dos dois
+   caminhos, os dois arquivos nascem dentro dela, nunca no vault, pela mesma
+   razão de `visao-geral.md` — a zona reescrita é apagada e reescrita a cada
+   geração. São os destinos que `fonte.backlog` e `fonte.indice_adrs`
+   declaram desde já no gerador (passo seguinte); sem eles, o primeiro
+   `/dds:Status` de **qualquer** projeto encontra backlog ilegível, e a
+   primeira promoção do `/dds:End` não tem onde escrever — não só no
+   projeto que chegou sem documentação nenhuma.
+
+   **A semeadura nunca sobrescreve.** É a mesma arma carregada que o
+   `--semear` do gerador existe para travar (passo 5) — o que é do usuário
+   não se recria por cima, e aqui o usuário pode já ter `backlog.md` ou
+   `adrs/indice.md` de um histórico próprio. Para cada um dos dois:
+
+   - **Não existe** → crie com a estrutura abaixo.
+   - **Já existe** → preserve, sem tocar, e diga ao usuário, numa linha, que
+     preservou o arquivo e por quê.
+   - **Existe, mas sem a estrutura que o protocolo lê** (um `backlog.md` sem
+     a seção `### Execução`, por exemplo, ou um `adrs/indice.md` sem
+     contador no cabeçalho) → não conserte sozinho. Avise o usuário e nomeie
+     o que falta, para ele decidir.
+
+   `FONTE/backlog.md`, quando precisa nascer, ganha uma seção de fase, a
+   tabela de itens que ela guarda, e a seção `### Execução` que a fila de
+   execução lê — estrutura, não itens fabricados:
+
+   ```markdown
+   # Backlog
+
+   Fila de execução deste projeto. Escreva aqui, e regenere — nunca no
+   vault: a zona reescrita é apagada e reescrita a cada geração.
+
+   ## Fase 1
+
+   | # | Item | Depende de |
+   |---|---|---|
+
+   ### Execução
+   ```
+
+   `FONTE/adrs/indice.md`, quando precisa nascer, ganha cabeçalho e contador
+   zerado:
+
+   ```markdown
+   # Índice de decisões arquiteturais
+
+   Uma decisão por arquivo nesta pasta, numerada em ordem. Escreva aqui, e
+   regenere — nunca no vault: a zona reescrita é apagada e reescrita a cada
+   geração.
+
+   Contador: 0
+   ```
+
+   Só então siga para a pergunta 2 — os dois ramos acima convergem aqui.
 
 2. **Onde o vault deve nascer?** Padrão `cerebro/`.
 3. **Que documento nomeado é pré-requisito?** Não a pasta do item 1 inteira —
@@ -111,7 +174,7 @@ resposta aberta.
    faz o passo 3 recusar gerar enquanto ele não existir; responder "nenhum"
    abre mão dessa checagem, e uma fonte incompleta vai gerar um vault que
    *parece* completo, sem que nada avise.
-4. **Como se chama a pasta espelhada dentro do vault?** Padrão
+4. **Como se chama a zona reescrita dentro do vault?** Padrão
    `10 Documentos`.
 
 Depois de saber onde mora a fonte (item 1), confira se os caminhos padrão de
@@ -124,7 +187,8 @@ da fonte.
 
 Então escreva as duas peças:
 
-**O gerador**, copiado do esqueleto e com as quatro constantes preenchidas:
+**O gerador**, copiado do esqueleto e com as quatro constantes da entrevista
+preenchidas:
 
 ```sh
 mkdir -p ferramentas
@@ -132,8 +196,11 @@ cp "$CLAUDE_PLUGIN_ROOT/skills/dds/scripts/esqueleto_gerador.py" \
    ferramentas/gerar_cerebro.py
 ```
 
-Edite o bloco `# ── configuração ──` com as respostas. Não toque no resto: a
-DDS depende de `--contrato`, e a guarda depende das três zonas.
+Edite o bloco `# ── configuração ──` com as respostas. As três constantes
+seguintes (`BACKLOG`, `ADRS`, `INDICE_ADRS`) já nascem certas, derivadas de
+`FONTE` — só as edite se este projeto guardar backlog ou ADRs num lugar
+diferente. Não toque no resto do arquivo: a DDS depende de `--contrato`, e a
+guarda depende das três zonas.
 
 **O contrato**, em `.claude/dd.md`:
 
@@ -174,8 +241,9 @@ entrevista:
 | `fonte.documentos` | `FONTE` — resposta 1 (ou a pasta confirmada na semeadura) |
 | `vault` (raiz do JSON) | `VAULT` — resposta 2, o mesmo valor escrito em `.claude/dd.md` |
 | `fonte.questoes`, antes de `/70 Decisões em aberto` | `VAULT` — resposta 2 de novo, mas vazando do gerador, não do frontmatter |
-| `zonas.reescrita[0]` | `ZONA_ESPELHO` — resposta 4 |
+| `zonas.reescrita[0]` | `ZONA_ESPELHO` — resposta 4. `ZONA_ESPELHO` é só o nome da constante no gerador; a zona em si se chama `zonas.reescrita` |
 | `prerequisitos` | `PREREQUISITOS` — resposta 3: a lista com o documento nomeado, ou lista vazia se a resposta foi "nenhum" — **nunca** a pasta do item 1, mesmo que o esqueleto tenha vindo assim |
+| `fonte.backlog`, `fonte.adrs`, `fonte.indice_adrs` | dentro de `FONTE` — resposta 1: os três derivam dela e não pedem resposta própria; se um deles não fizer sentido para este projeto, remova a chave do `CONTRATO` em vez de inventar destino |
 
 As duas linhas de `VAULT` conferem coisas diferentes: `vault` vem do
 `.claude/dd.md` que você acabou de escrever, e `fonte.questoes` vaza do
@@ -227,23 +295,36 @@ e rode de novo; não contorne a guarda.
 ### 4. Verificar o que nasceu
 
 ```sh
-python3 <gerador> --verificar
+<gerador> --verificar
 ```
 
 Aviso não interrompe a construção — é relatado ao usuário, e a construção segue.
 Só o erro (código de saída diferente de zero) faz o comando parar.
+
+Se der erro aqui, o vault **já foi gerado** pelo passo 3 e ainda não foi
+commitado — pare, mas não deixe o projeto nesse estado sem dizer o que fazer.
+Duas saídas, e a decisão é do usuário: corrigir a fonte e rodar a guarda de
+novo (passo 3), ou commitar o que já nasceu e corrigir depois. O que não vale
+é parar calado: um vault gerado e não commitado não é pendência visível para
+ninguém — o passo 1 deste mesmo comando decide pela existência de notas e
+pastas, não por commit, e uma próxima execução leria esse vault como
+completo e diria para não construir, escondendo o erro de verificação que
+nunca foi corrigido. Enquanto isso, o conteúdo inteiro nunca chegou a ser
+commitado — está a um `git clean` de sumir sem deixar rastro.
 
 Confirme também que as pastas de `zonas.semeada` e `zonas.livre` existem — são
 as que fazem o vault ser do usuário, e não do gerador.
 
 ### 5. Nunca use `--semear` num vault que já existe
 
-`--semear` **sobrescreve** a zona semeada: as pastas onde moram respostas que a
-fonte não tem. Sobrescrever é perdê-las, e elas não voltam pela regeneração,
-porque a fonte nunca as teve.
+`--semear` **recusa e sai 1** quando a zona semeada já existe — ela não
+sobrescreve nada. A proteção existe porque a zona semeada guarda respostas que
+a fonte não tem: se `--semear` sobrescrevesse, perdê-las seria o efeito
+colateral de um comando que parece inofensivo.
 
-Só há um caso legítimo: a pasta semeada **não existe**. Aí ela nasce sozinha na
-geração normal do passo 3, sem `--semear`.
+Só há um caso legítimo para chamar `--semear`: a pasta semeada **não existe**.
+Aí ela nasce sozinha na geração normal do passo 3, sem precisar de `--semear`
+à parte.
 
 Se o vault parecer errado e a tentação for semear de novo, pare: o conserto de
 nota que sumiu é **devolvê-la à fonte**, nunca recriar o vault por cima.
@@ -256,8 +337,9 @@ docs(cerebro): construir o cerebro a partir da fonte
 <corpo: quantas notas, e o que a fonte tinha que permitiu gera-las>
 ```
 
-Inclua o vault, `.claude/dd.md`, o gerador e o documento de semeadura
-escrito na fonte pela pergunta 1, se a entrevista os criou.
+Inclua o vault, `.claude/dd.md`, o gerador, e os arquivos semeados na fonte
+pelo passo 2 — `visao-geral.md`, `backlog.md` e `adrs/indice.md` — se a
+entrevista os criou.
 
 ### 7. Devolver o resumo
 
@@ -276,6 +358,30 @@ find "<vault>/<zona>" -name '*.md' -not -path '*/.obsidian/*' | wc -l
 
 Reporte os três totais (reescrita, semeada, livre) e a soma dos três. Se nada
 foi construído porque o cérebro já existia, um bullet dizendo isso.
+
+## O que foi semeado
+Só se o passo 2 tocou algum dos três arquivos. Um bullet por arquivo
+tocado, e cada bullet **declara qual dos dois aconteceu** — criado ou
+preservado — nunca uma frase que sirva igual para os dois, porque anunciar
+como criado o que só foi preservado é falso:
+
+- `visao-geral.md`, **criado** — o retrato inicial do projeto; edite
+  direto, na fonte. *Ou* `visao-geral.md`, **preservado** — já existia, não
+  foi tocado.
+- `backlog.md`, **criado** — nasceu com a estrutura vazia; a fila de
+  execução sai daqui: abra uma seção de fase, some itens à tabela, feche o
+  que foi entregue em `### Execução`. *Ou* `backlog.md`, **preservado** — já
+  existia; diga também se a estrutura bateu com o que o protocolo lê, e o
+  que falta se não bateu.
+- `adrs/indice.md`, **criado** ou **preservado** — mesma regra do backlog.
+  Toda decisão arquitetural vira um arquivo novo em `adrs/`, listado e
+  contado aqui.
+
+Se a zona semeada de questões (`70 Decisões em aberto`, no vault) nasceu
+nesta execução, mais um bullet: questão em aberto mora ali, e se edita
+direto, sem passar pela fonte.
+
+Se nada foi criado nem preservado nesta execução, pule esta seção.
 
 ## Verificação
 O que o `--verificar` respondeu, em uma linha.

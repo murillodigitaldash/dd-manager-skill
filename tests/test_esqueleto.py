@@ -45,6 +45,43 @@ class TestEsqueleto(unittest.TestCase):
             self.assertIn(zona, c["zonas"])
         self.assertIn("prerequisitos", c)
 
+    def test_contrato_traz_as_cinco_chaves_de_fonte(self):
+        # F1: o protocolo consome cinco chaves de `fonte` — documentos,
+        # questoes, backlog, adrs e indice_adrs. Sem esta trava, alguém pode
+        # derrubar uma delas do CONTRATO do esqueleto e a suíte segue verde,
+        # enquanto o protocolo volta a chegar vazio no dia 1. Afirma as
+        # chaves nomeadamente (não só a contagem) e para onde cada uma
+        # aponta — dentro da fonte, ou dentro do vault, conforme o caso.
+        r = self._rodar("--contrato")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        c = json.loads(r.stdout)
+        fonte = c["fonte"]
+        self.assertEqual(
+            set(fonte.keys()),
+            {"documentos", "questoes", "backlog", "adrs", "indice_adrs"})
+        # Dentro da fonte (FONTE = "docs" no padrão do esqueleto):
+        self.assertEqual(fonte["documentos"], "docs")
+        self.assertEqual(fonte["backlog"], os.path.join("docs", "backlog.md"))
+        self.assertEqual(fonte["adrs"], os.path.join("docs", "adrs"))
+        self.assertEqual(fonte["indice_adrs"],
+                         os.path.join("docs", "adrs", "indice.md"))
+        # Dentro do vault (VAULT = "cerebro" no padrão do esqueleto):
+        self.assertEqual(fonte["questoes"],
+                         os.path.join("cerebro", "70 Decisões em aberto"))
+
+    def test_fonte_questoes_deriva_da_zona_semeada_sem_repetir_literal(self):
+        # `fonte.questoes` precisa nomear a mesma pasta que `zonas.semeada`
+        # declara para questões — derivada da mesma constante, não um
+        # literal repetido à parte. Se alguém voltar a hardcodar o nome da
+        # pasta em `fonte.questoes`, uma mudança futura em só um dos dois
+        # lugares diverge, e este teste, comparando os dois, pega.
+        r = self._rodar("--contrato")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        c = json.loads(r.stdout)
+        zona_questoes = c["zonas"]["semeada"][1]
+        self.assertEqual(zona_questoes, "70 Decisões em aberto")
+        self.assertEqual(os.path.basename(c["fonte"]["questoes"]), zona_questoes)
+
     def test_gera_uma_nota_por_documento(self):
         r = self._rodar()
         self.assertEqual(r.returncode, 0, r.stderr)
