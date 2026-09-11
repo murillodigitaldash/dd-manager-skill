@@ -67,7 +67,14 @@ resposta aberta.
      /dds:Build ou /dds:End apaga o trabalho de quem escreveu aqui.
    -->
 
-   Com as respostas, escreva **um** documento Markdown, sempre em
+   Antes de escrever, confira se `FONTE/visao-geral.md` já existe. Se
+   existir, **não toque** — pode ser de uma execução anterior deste mesmo
+   passo, ou o usuário pode tê-lo criado à mão entre uma pergunta e outra —
+   e semear por cima seria perdê-lo, na pior hora possível: a primeira vez
+   que a pessoa roda a plugin. Diga, numa linha, que preservou o arquivo e
+   por quê, e siga sem escrever nele.
+
+   Só quando ele não existir, escreva **um** documento Markdown, sempre em
    `FONTE/visao-geral.md` (crie a pasta se ela ainda não existir) — o nome é
    fixo, não uma escolha do agente, para que duas execuções deste mesmo
    passo produzam o mesmo caminho. O documento é feito das respostas do
@@ -109,13 +116,24 @@ resposta aberta.
    São os destinos que `fonte.backlog` e `fonte.indice_adrs` declaram desde
    já no gerador (passo seguinte); sem eles, o primeiro `/dds:Status` do
    projeto encontra backlog ilegível, e a primeira promoção do `/dds:End`
-   não tem onde escrever. Crie cada um só se ainda não existir — um projeto
-   com histórico próprio pode já ter o seu, e aí a resposta do item 1 já
-   aponta para ele.
+   não tem onde escrever.
 
-   `FONTE/backlog.md` nasce com uma seção de fase, a tabela de itens que ela
-   guarda, e a seção `### Execução` que a fila de execução lê — estrutura,
-   não itens fabricados:
+   **A semeadura nunca sobrescreve.** É a mesma arma carregada que o
+   `--semear` do gerador existe para travar (passo 5) — o que é do usuário
+   não se recria por cima, e aqui o usuário pode já ter `backlog.md` ou
+   `adrs/indice.md` de um histórico próprio. Para cada um dos dois:
+
+   - **Não existe** → crie com a estrutura abaixo.
+   - **Já existe** → preserve, sem tocar, e diga ao usuário, numa linha, que
+     preservou o arquivo e por quê.
+   - **Existe, mas sem a estrutura que o protocolo lê** (um `backlog.md` sem
+     a seção `### Execução`, por exemplo, ou um `adrs/indice.md` sem
+     contador no cabeçalho) → não conserte sozinho. Avise o usuário e nomeie
+     o que falta, para ele decidir.
+
+   `FONTE/backlog.md`, quando precisa nascer, ganha uma seção de fase, a
+   tabela de itens que ela guarda, e a seção `### Execução` que a fila de
+   execução lê — estrutura, não itens fabricados:
 
    ```markdown
    # Backlog
@@ -131,7 +149,8 @@ resposta aberta.
    ### Execução
    ```
 
-   `FONTE/adrs/indice.md` nasce com cabeçalho e contador zerado:
+   `FONTE/adrs/indice.md`, quando precisa nascer, ganha cabeçalho e contador
+   zerado:
 
    ```markdown
    # Índice de decisões arquiteturais
@@ -334,8 +353,8 @@ Reporte os três totais (reescrita, semeada, livre) e a soma dos três. Se nada
 foi construído porque o cérebro já existia, um bullet dizendo isso.
 
 ## O que foi semeado
-Só se o passo 2 criou algum arquivo. Um bullet por arquivo, dizendo para que
-serve e onde a pessoa escreve daqui em diante:
+Só se o passo 2 criou ou preservou algum arquivo. Um bullet por arquivo
+criado, dizendo para que serve e onde a pessoa escreve daqui em diante:
 
 - `visao-geral.md` — o retrato inicial do projeto; edite direto, na fonte.
 - `backlog.md` — a fila de execução sai daqui: abra uma seção de fase, some
@@ -345,7 +364,11 @@ serve e onde a pessoa escreve daqui em diante:
 - `70 Decisões em aberto`, no vault — zona semeada: questão em aberto mora
   ali, e se edita direto, sem passar pela fonte.
 
-Se nada foi semeado nesta execução, pule esta seção.
+Se algum dos três já existia e foi preservado em vez de criado, um bullet
+à parte por arquivo, dizendo que já existia e por isso não foi tocado — e,
+se a estrutura dele não bateu com o que o protocolo lê, o que falta.
+
+Se nada foi semeado nem preservado nesta execução, pule esta seção.
 
 ## Verificação
 O que o `--verificar` respondeu, em uma linha.
