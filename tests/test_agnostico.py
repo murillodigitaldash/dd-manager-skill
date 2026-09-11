@@ -18,12 +18,13 @@ proíbe):
    a um projeto (em vez de `$CLAUDE_PLUGIN_ROOT`) só funciona no projeto onde
    esse caminho relativo existe.
 3. Um documento citado pelo nome — `algum-documento-do-projeto.md` — só
-   existe no projeto que o tem. A defesa aqui é uma allowlist: todo literal
-   terminado em `.md` dentro de um arquivo do plugin precisa casar com uma
-   forma que a própria DDS usa (`dd.md`, `Índice.md`, os padrões de artefato
-   `AAAA-MM-DD-...`). Um nome de documento específico de projeto não casa
-   com nenhuma forma da lista, e reprova — sem o teste precisar saber nome
-   de projeto nenhum.
+   existe no projeto que o tem. A defesa aqui é uma allowlist de duas
+   metades: os nomes concretos são DERIVADOS das constantes `ARQUIVO_*` dos
+   scripts do plugin — quem escreve o arquivo o declara, e a allowlist segue
+   sozinha —, e só as formas de artefato (`AAAA-MM-DD-...`, globs) ficam à
+   mão, porque não têm código de onde derivar. Um nome de documento
+   específico de projeto não casa com nenhuma das duas metades, e reprova —
+   sem o teste precisar saber nome de projeto nenhum.
 
 Uma rodada de revisão anterior comparou a primeira versão deste arquivo (uma
 lista de sete termos proibidos por nome) contra as regras 1 e 2 acima e
@@ -42,9 +43,18 @@ para a máquina de quem instala o plugin é só `skills/`, `commands/` e
 
 import os
 import re
+import sys
 import unittest
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Os scripts do plugin são importados como módulos — não rodados — para ler
+# deles os nomes de arquivo que eles declaram escrever. Nenhum dos três faz
+# nada ao ser importado: todos guardam o trabalho atrás de `__main__`.
+sys.path.insert(0, os.path.join(RAIZ, "skills", "dds", "scripts"))
+import contrato          # noqa: E402
+import esqueleto_gerador  # noqa: E402
+import semeador          # noqa: E402
 
 # As pastas que viajam para a máquina de quem instala o plugin.
 PASTAS_DO_PLUGIN = ["skills", "commands", ".claude-plugin"]
@@ -57,26 +67,73 @@ PASTAS_DO_PLUGIN = ["skills", "commands", ".claude-plugin"]
 CAMINHO_ABSOLUTO = re.compile(
     r"(?:/Users/|/home/|/opt/|/var/|/Volumes/|/mnt/|~/|\b[A-Za-z]:\\)\S")
 
-# Formas de nome de arquivo `.md` que a própria DDS usa hoje, levantadas
-# varrendo skills/ e commands/. Qualquer outro literal `.md` num arquivo do
-# plugin é, por eliminação, específico de um projeto — não desta plugin.
-# `visao-geral.md`, `backlog.md` e `indice.md` (dentro de `adrs/`) são os
-# nomes fixos dos arquivos de semeadura que /dds:Build escreve na entrevista
-# (ver commands/Build.md, passo 2, e skills/dds/scripts/esqueleto_gerador.py):
-# convenção da própria DDS, não de um projeto — por isso entram na lista, e
-# não são exceção a ela.
-ALLOWLIST_MD = frozenset([
-    "dd.md",
+# A allowlist de `.md` tem duas metades, e só uma delas cresce quando a
+# plugin cresce. Misturar as duas era o defeito: dez formas escritas à mão,
+# e nada que lembrasse de estender a lista quando um arquivo novo nascesse —
+# então o teste passava a reprovar trabalho legítimo, e o conserto dependia
+# de alguém lembrar.
+#
+# METADE (a), derivada: nome concreto de arquivo existe porque algum código
+# do plugin o escreve. Esses vêm das constantes `ARQUIVO_*` dos módulos
+# abaixo, e não são repetidos aqui. Declarar o arquivo onde ele é escrito
+# basta; a allowlist segue sozinha. É o mesmo padrão que `scripts_da_plugin()`
+# já usa para os `.py`: derivar do que existe, não de lista à mão.
+MODULOS_DO_PLUGIN = (contrato, esqueleto_gerador, semeador)
+
+# METADE (b), à mão: forma de nome, não arquivo. Não há código de onde
+# derivá-las — são os padrões dos artefatos que o projeto produz, e a DDS os
+# reconhece sem nunca os escrever. Quase não mudam, e por isso o custo de
+# mantê-las aqui é baixo — mas nome concreto de arquivo não entra
+# (`test_a_metade_manual_da_allowlist_e_so_forma_de_artefato` reprova).
+PADROES_DE_ARTEFATO = frozenset([
     "AAAA-MM-DD-sessao.md",
     "AAAA-MM-DD-*.md",
     "*-sessao.md",
     "AAAA-MM-DD-<fase>-<plano>-ledger.md",
     "*.md",
-    "backlog.md",
-    "indice.md",
-    "Índice.md",
-    "visao-geral.md",
 ])
+
+
+def nomes_md_declarados():
+    """Nomes `.md` que o próprio código do plugin declara escrever.
+
+    Lidos das constantes `ARQUIVO_*` dos módulos do plugin — não de uma lista
+    mantida à mão aqui. Um arquivo novo declarado assim no script que o
+    escreve entra na allowlist sem que ninguém precise lembrar deste teste.
+    """
+    nomes = set()
+    for modulo in MODULOS_DO_PLUGIN:
+        for atributo, valor in vars(modulo).items():
+            if (atributo.startswith("ARQUIVO_")
+                    and isinstance(valor, str) and valor.endswith(".md")):
+                nomes.add(valor)
+    return nomes
+
+
+def allowlist_md():
+    return nomes_md_declarados() | set(PADROES_DE_ARTEFATO)
+
+
+def explicacao_da_allowlist(achados):
+    """A mensagem de falha. Acusar não basta: ela precisa dizer o conserto.
+
+    São dois lugares legítimos, e qual é qual depende do que o nome é — não
+    de qual dá menos trabalho.
+    """
+    return "\n".join([""] + achados + [
+        "",
+        "Um `.md` citado pelo nome que não casa com forma nenhuma da DDS é,",
+        "por eliminação, documento de um projeto específico — e citá-lo aqui",
+        "é o defeito que esta regra existe para pegar.",
+        "",
+        "Se o arquivo é da própria DDS, há dois lugares onde declará-lo:",
+        "",
+        "  - é arquivo que algum script do plugin escreve → declare-o como",
+        "    constante `ARQUIVO_*` nesse script. A allowlist o lê de lá.",
+        "  - é forma de artefato do projeto (data, glob, placeholder), que a",
+        "    DDS reconhece mas nunca escreve → acrescente a forma a",
+        "    `PADROES_DE_ARTEFATO`, neste arquivo.",
+    ])
 
 # Um literal `.md`: uma sequência de caracteres de nome/caminho terminada em
 # ".md", não seguida de mais um caractere de palavra (para não confundir
@@ -143,11 +200,12 @@ def scripts_sem_claude_plugin_root(linha, nomes_de_script):
 
 def literais_md_fora_da_allowlist(texto):
     """Literais `.md` em `texto` cujo nome-base não está na allowlist."""
+    permitidos = allowlist_md()
     achados = []
     for m in LITERAL_MD.finditer(texto):
         token = m.group(0)
         base = token.rsplit("/", 1)[-1]
-        if base not in ALLOWLIST_MD:
+        if base not in permitidos:
             achados.append(token)
     return achados
 
@@ -197,7 +255,7 @@ class TestAgnostico(unittest.TestCase):
             for token in literais_md_fora_da_allowlist(texto):
                 achados.append("%s → %s" % (
                     os.path.relpath(caminho, RAIZ), token))
-        self.assertEqual(achados, [], "\n".join([""] + achados))
+        self.assertEqual(achados, [], explicacao_da_allowlist(achados))
 
     def test_o_plugin_tem_arquivos_para_varrer(self):
         # Sem isto, os testes acima passariam por vacuidade num repo vazio,
@@ -212,6 +270,49 @@ class TestAgnostico(unittest.TestCase):
                            "nenhum .md encontrado em skills/, commands/ ou "
                            ".claude-plugin/ — os testes de invocação e de "
                            "allowlist passariam sem verificar nada")
+
+    def test_nome_declarado_por_script_entra_na_allowlist_sozinho(self):
+        # A regressão que este teste existe para pegar não é um nome de
+        # projeto vazando — é o contrário: a plugin ganha um arquivo próprio,
+        # ninguém lembra de estender a allowlist à mão, e o teste passa a
+        # reprovar trabalho legítimo. A allowlist deriva das constantes
+        # `ARQUIVO_*` dos scripts, então declarar o arquivo onde ele é
+        # escrito basta — não há segunda lista para lembrar.
+        semeador.ARQUIVO_INVENTADO_PELO_TESTE = "coisa-nova.md"
+        try:
+            self.assertIn("coisa-nova.md", nomes_md_declarados())
+        finally:
+            del semeador.ARQUIVO_INVENTADO_PELO_TESTE
+
+    def test_os_nomes_da_allowlist_vem_dos_scripts_que_os_escrevem(self):
+        # Cada nome concreto de arquivo da allowlist tem que ser declarado
+        # pelo código que o escreve — não repetido aqui. Se um deles sumir
+        # daqui é porque sumiu de lá, e aí a allowlist tem que encolher
+        # junto.
+        self.assertEqual(
+            nomes_md_declarados(),
+            {"dd.md", "backlog.md", "indice.md", "Índice.md",
+             "visao-geral.md"})
+
+    def test_a_metade_manual_da_allowlist_e_so_forma_de_artefato(self):
+        # A metade que sobrou à mão não pode ganhar nome concreto de arquivo
+        # de volta: nome concreto tem código que o escreve, e é de lá que ele
+        # deve vir. O que mora aqui é forma — data, glob ou placeholder —,
+        # que não tem código de onde derivar.
+        for padrao in PADROES_DE_ARTEFATO:
+            self.assertTrue(
+                "*" in padrao or "AAAA-MM-DD" in padrao,
+                "%r é nome concreto de arquivo, não forma de artefato — "
+                "declare-o como constante ARQUIVO_* no script que o "
+                "escreve" % padrao)
+
+    def test_a_falha_da_allowlist_ensina_onde_declarar_o_nome(self):
+        # Sem isto a mensagem só acusa. Quem topa com ela precisa saber que
+        # há dois lugares legítimos, e qual é qual — senão o conserto vira
+        # adivinhação, ou pior, acrescentar à mão o que deveria ser derivado.
+        mensagem = explicacao_da_allowlist(["proposta_do_projeto.md"])
+        self.assertIn("ARQUIVO_", mensagem)
+        self.assertIn("PADROES_DE_ARTEFATO", mensagem)
 
     def test_regras_estruturais_pegam_a_forma_historica_do_defeito(self):
         # Regressão de um achado de revisão: a primeira versão deste

@@ -55,6 +55,10 @@ INDICE_ADRS = os.path.join(FONTE, "adrs", "indice.md")   # índice e contador
 # ────────────────────────────────────────────────────────────────────────────
 
 ZONA_MAPAS = "00 Mapas"
+# Declarado aqui, e não solto dentro de `semear()`, porque é daqui que
+# `tests/test_agnostico.py` deriva a allowlist de `.md` — constante
+# `ARQUIVO_*` num script do plugin entra na allowlist sozinha.
+ARQUIVO_INDICE_MAPAS = "Índice.md"
 ZONA_QUESTOES = "70 Decisões em aberto"
 ZONA_SEMEADA = [ZONA_MAPAS, ZONA_QUESTOES]
 ZONA_LIVRE = ["90 Notas"]
@@ -111,7 +115,7 @@ def semear(forcar=False):
                   "Se uma nota sumiu, o conserto é devolvê-la à fonte.\n")
             return 1
         os.makedirs(destino, exist_ok=True)
-    indice = caminho(VAULT, ZONA_MAPAS, "Índice.md")
+    indice = caminho(VAULT, ZONA_MAPAS, ARQUIVO_INDICE_MAPAS)
     if not os.path.exists(indice):
         with open(indice, "w", encoding="utf-8") as f:
             f.write("# Índice\n\nMapa do cérebro. Esta nota é sua — o gerador\n"

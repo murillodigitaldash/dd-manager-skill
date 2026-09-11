@@ -35,6 +35,13 @@ ARTEFATOS_PADRAO = {
 
 ZONAS_EXIGIDAS = ("reescrita", "semeada", "livre")
 
+# O arquivo de contrato, declarado onde é lido. O nome fica numa constante,
+# e não solto no meio do código, porque `tests/test_agnostico.py` deriva a
+# allowlist de `.md` das constantes `ARQUIVO_*` dos scripts do plugin — um
+# arquivo próprio da DDS declarado assim entra na allowlist sozinho.
+PASTA_CONTRATO = ".claude"
+ARQUIVO_CONTRATO = "dd.md"
+
 
 class ContratoInvalido(Exception):
     """Contrato ausente, incompleto ou incoerente. A mensagem diz o conserto."""
@@ -114,7 +121,7 @@ def _validar(bruto, origem):
 
 def ler(raiz):
     """Devolve o contrato resolvido do projeto em `raiz`."""
-    caminho = os.path.join(raiz, ".claude", "dd.md")
+    caminho = os.path.join(raiz, PASTA_CONTRATO, ARQUIVO_CONTRATO)
     if not os.path.isfile(caminho):
         raise ContratoInvalido(
             "Este projeto não tem contrato: falta `.claude/dd.md`.\n"
