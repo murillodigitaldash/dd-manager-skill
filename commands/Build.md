@@ -67,20 +67,10 @@ resposta aberta.
      /dds:Build ou /dds:End apaga o trabalho de quem escreveu aqui.
    -->
 
-   Antes de escrever, confira se `FONTE/visao-geral.md` já existe. Se
-   existir, **não toque** — pode ser de uma execução anterior deste mesmo
-   passo, ou o usuário pode tê-lo criado à mão entre uma pergunta e outra —
-   e semear por cima seria perdê-lo, na pior hora possível: a primeira vez
-   que a pessoa roda a plugin. Diga, numa linha, que preservou o arquivo e
-   por quê, e siga sem escrever nele.
-
-   Só quando ele não existir, escreva **um** documento Markdown, sempre em
-   `FONTE/visao-geral.md` (crie a pasta se ela ainda não existir) — o nome é
-   fixo, não uma escolha do agente, para que duas execuções deste mesmo
-   passo produzam o mesmo caminho. O documento é feito das respostas do
-   usuário — nunca invente conteúdo no lugar dele. Se ele não responder uma
-   das quatro, a seção (ou o título, no caso da pergunta a) correspondente
-   fica só com a linha "Em aberto — ainda não respondido.":
+   Monte o corpo de **um** documento Markdown com as respostas — o conteúdo
+   é do usuário, nunca invente no lugar dele. Se ele não responder uma das
+   quatro, a seção (ou o título, no caso da pergunta a) correspondente fica
+   só com a linha "Em aberto — ainda não respondido.":
 
    ```markdown
    # <resposta a, ou "Em aberto — ainda não respondido.">
@@ -103,65 +93,59 @@ resposta aberta.
    reescrita é apagada e reescrita a cada geração.
    ```
 
-   Um projeto que entra nesta pergunta sem documentação nenhuma sai deste
-   ramo com uma fonte de uma nota (`visao-geral.md`) — ou nenhuma nota nova,
-   se ele já existia e foi preservado. O resto da semeadura é comum aos dois
-   ramos desta pergunta e vem a seguir, antes de passar para a pergunta 2.
+   **Não escreva o arquivo você mesmo.** Passe o corpo ao semeador — é ele
+   que decide escrever ou preservar, e essa decisão é código, não instrução:
 
-   **Semeie `backlog.md` e `adrs/indice.md` sempre, nos dois ramos acima —
-   com documentação prévia ou sem ela.** Isto não é exclusivo de quem chegou
-   sem documentação: com `FONTE` já determinada, por qualquer um dos dois
-   caminhos, os dois arquivos nascem dentro dela, nunca no vault, pela mesma
-   razão de `visao-geral.md` — a zona reescrita é apagada e reescrita a cada
-   geração. São os destinos que `fonte.backlog` e `fonte.indice_adrs`
-   declaram desde já no gerador (passo seguinte); sem eles, o primeiro
-   `/dds:Status` de **qualquer** projeto encontra backlog ilegível, e a
-   primeira promoção do `/dds:End` não tem onde escrever — não só no
-   projeto que chegou sem documentação nenhuma.
-
-   **A semeadura nunca sobrescreve.** É a mesma arma carregada que o
-   `--semear` do gerador existe para travar (passo 5) — o que é do usuário
-   não se recria por cima, e aqui o usuário pode já ter `backlog.md` ou
-   `adrs/indice.md` de um histórico próprio. Para cada um dos dois:
-
-   - **Não existe** → crie com a estrutura abaixo.
-   - **Já existe** → preserve, sem tocar, e diga ao usuário, numa linha, que
-     preservou o arquivo e por quê.
-   - **Existe, mas sem a estrutura que o protocolo lê** (um `backlog.md` sem
-     a seção `### Execução`, por exemplo, ou um `adrs/indice.md` sem
-     contador no cabeçalho) → não conserte sozinho. Avise o usuário e nomeie
-     o que falta, para ele decidir.
-
-   `FONTE/backlog.md`, quando precisa nascer, ganha uma seção de fase, a
-   tabela de itens que ela guarda, e a seção `### Execução` que a fila de
-   execução lê — estrutura, não itens fabricados:
-
-   ```markdown
-   # Backlog
-
-   Fila de execução deste projeto. Escreva aqui, e regenere — nunca no
-   vault: a zona reescrita é apagada e reescrita a cada geração.
-
-   ## Fase 1
-
-   | # | Item | Depende de |
-   |---|---|---|
-
-   ### Execução
+   ```sh
+   python3 "$CLAUDE_PLUGIN_ROOT/skills/dds/scripts/semeador.py" \
+     --fonte "<FONTE>" --visao-geral - <<'MD'
+   <o corpo montado acima>
+   MD
    ```
 
-   `FONTE/adrs/indice.md`, quando precisa nascer, ganha cabeçalho e contador
-   zerado:
+   **Se o projeto já tinha documentação** — o outro ramo desta pergunta —
+   não houve entrevista e não há corpo a passar. Rode a mesma chamada sem
+   `--visao-geral`:
 
-   ```markdown
-   # Índice de decisões arquiteturais
-
-   Uma decisão por arquivo nesta pasta, numerada em ordem. Escreva aqui, e
-   regenere — nunca no vault: a zona reescrita é apagada e reescrita a cada
-   geração.
-
-   Contador: 0
+   ```sh
+   python3 "$CLAUDE_PLUGIN_ROOT/skills/dds/scripts/semeador.py" --fonte "<FONTE>"
    ```
+
+   **Os dois ramos convergem aqui**, e é por isso que a chamada aparece nos
+   dois: `backlog.md` e `adrs/indice.md` são semeados sempre, com
+   documentação prévia ou sem ela. São os destinos que `fonte.backlog` e
+   `fonte.indice_adrs` declaram desde já no gerador (passo seguinte); sem
+   eles, o primeiro `/dds:Status` de **qualquer** projeto encontra backlog
+   ilegível, e a primeira promoção do `/dds:End` não tem onde escrever.
+
+   O que o semeador garante — e por isso você não precisa garantir:
+
+   - **Nunca sobrescreve.** É a mesma arma carregada que o `--semear` do
+     gerador existe para travar (passo 5): o que é do usuário não se recria
+     por cima, e ele pode já ter `backlog.md` ou `adrs/indice.md` de um
+     histórico próprio.
+   - **Os três arquivos nascem dentro de `FONTE`**, nunca no vault — a zona
+     reescrita é apagada e reescrita a cada geração.
+   - **Não conserta arquivo alheio.** Um arquivo que existe sem a estrutura
+     que o protocolo lê vira aviso, não conserto silencioso.
+
+   Ele devolve JSON, um veredito por arquivo:
+
+   ```json
+   {"arquivos": [{"caminho": "docs/visao-geral.md", "veredito": "criado"},
+                 {"caminho": "docs/backlog.md", "veredito": "estrutura_incompleta",
+                  "falta": ["a seção `### Execução`, de onde sai a fila de execução"]},
+                 {"caminho": "docs/adrs/indice.md", "veredito": "preservado"}]}
+   ```
+
+   Relate ao usuário uma linha por arquivo, com o veredito que **veio** — não
+   o que você esperava que viesse — e guarde este JSON para o passo 7. Em
+   `estrutura_incompleta`, nomeie o que `falta` e siga: é aviso, não erro, e
+   a decisão é de quem escreveu o arquivo.
+
+   Se o script sair 1, **pare e reporte**: ou a pasta-fonte não existe (a
+   resposta da pergunta 1 está errada), ou o corpo chegou vazio no stdin.
+   Nos dois casos ele não escreveu nada.
 
    Só então siga para a pergunta 2 — os dois ramos acima convergem aqui.
 
@@ -337,9 +321,10 @@ docs(cerebro): construir o cerebro a partir da fonte
 <corpo: quantas notas, e o que a fonte tinha que permitiu gera-las>
 ```
 
-Inclua o vault, `.claude/dd.md`, o gerador, e os arquivos semeados na fonte
-pelo passo 2 — `visao-geral.md`, `backlog.md` e `adrs/indice.md` — se a
-entrevista os criou.
+Inclua o vault, `.claude/dd.md`, o gerador, e os arquivos que o semeador
+reportou como **`criado`** no passo 2 — `visao-geral.md`, `backlog.md` e
+`adrs/indice.md`. Um arquivo **`preservado`** ou **`estrutura_incompleta`**
+já era do projeto antes desta execução: não é coisa deste commit.
 
 ### 7. Devolver o resumo
 
@@ -360,22 +345,23 @@ Reporte os três totais (reescrita, semeada, livre) e a soma dos três. Se nada
 foi construído porque o cérebro já existia, um bullet dizendo isso.
 
 ## O que foi semeado
-Só se o passo 2 tocou algum dos três arquivos. Um bullet por arquivo
-tocado, e cada bullet **declara qual dos dois aconteceu** — criado ou
-preservado — nunca uma frase que sirva igual para os dois, porque anunciar
-como criado o que só foi preservado é falso:
+Só se o passo 2 chamou o semeador. Um bullet por arquivo do JSON que ele
+devolveu, e cada bullet **declara o veredito que veio** — `criado`,
+`preservado` ou `estrutura_incompleta` — nunca uma frase que sirva igual
+para mais de um, porque anunciar como criado o que só foi preservado é
+falso. O JSON é a fonte desta seção; não reconstrua de memória o que foi
+qual:
 
 - `visao-geral.md`, **criado** — o retrato inicial do projeto; edite
-  direto, na fonte. *Ou* `visao-geral.md`, **preservado** — já existia, não
-  foi tocado.
+  direto, na fonte. *Ou* **preservado** — já existia, não foi tocado.
 - `backlog.md`, **criado** — nasceu com a estrutura vazia; a fila de
   execução sai daqui: abra uma seção de fase, some itens à tabela, feche o
-  que foi entregue em `### Execução`. *Ou* `backlog.md`, **preservado** — já
-  existia; diga também se a estrutura bateu com o que o protocolo lê, e o
-  que falta se não bateu.
-- `adrs/indice.md`, **criado** ou **preservado** — mesma regra do backlog.
-  Toda decisão arquitetural vira um arquivo novo em `adrs/`, listado e
-  contado aqui.
+  que foi entregue em `### Execução`. *Ou* **preservado** — já existia, com
+  a estrutura que o protocolo lê. *Ou* **estrutura_incompleta** — existe e
+  não foi tocado, mas falta o que o `falta` do JSON nomeia, e até isso ser
+  resolvido a fila não é legível.
+- `adrs/indice.md`, mesmos três vereditos, mesma regra. Toda decisão
+  arquitetural vira um arquivo novo em `adrs/`, listado e contado aqui.
 
 Se a zona semeada de questões (`70 Decisões em aberto`, no vault) nasceu
 nesta execução, mais um bullet: questão em aberto mora ali, e se edita
