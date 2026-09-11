@@ -16,7 +16,12 @@ proíbe):
    faz sentido na máquina de quem o escreveu.
 2. Um comando que invoca um script da própria plugin por um caminho relativo
    a um projeto (em vez de `$CLAUDE_PLUGIN_ROOT`) só funciona no projeto onde
-   esse caminho relativo existe.
+   esse caminho relativo existe. A regra decide pelo CONTEXTO: dentro de
+   bloco cercado é comando, e qualquer menção a script do plugin reprova;
+   fora dele é prosa, e só a forma-caminho reprova. (Antes ela decidia por
+   sinal na linha — `/` ou o literal `python3` —, e por isso deixava escapar
+   `python contrato.py` sem o "3", outro interpretador, ou o nome entre
+   aspas.)
 3. Um documento citado pelo nome — `algum-documento-do-projeto.md` — só
    existe no projeto que o tem. A defesa aqui é uma allowlist de duas
    metades: os nomes concretos são DERIVADOS das constantes `ARQUIVO_*` dos
@@ -177,24 +182,73 @@ def scripts_da_plugin():
     return nomes
 
 
-def scripts_sem_claude_plugin_root(linha, nomes_de_script):
-    """Nomes de script referenciados por CAMINHO em `linha`, sem
-    `$CLAUDE_PLUGIN_ROOT` nela.
+CERCA = re.compile(r"^\s*(?:```|~~~)")
 
-    Só conta como referência a menção que é de fato um caminho — o nome do
-    script precedido de "/", como em ".../scripts/contrato.py" — ou uma
-    invocação explícita (`python3 contrato.py`). Uma prosa que só nomeia o
-    script para explicá-lo (\"as guardas de `guarda.py` leem...\") não é um
-    caminho relativo a projeto nenhum, e não é o defeito que esta regra
-    existe para pegar.
+
+def linhas_logicas(texto):
+    """Gera `(numero, conteudo, dentro_de_bloco)` para cada linha lógica.
+
+    Duas coisas acontecem aqui, e as duas importam para a regra abaixo:
+
+    1. As cercas (```) não são conteúdo — só alternam o regime entre prosa e
+       comando.
+    2. Linhas continuadas com `\\` são juntadas: um comando quebrado em duas
+       linhas é um comando só, e julgar a segunda sozinha acusaria um
+       `$CLAUDE_PLUGIN_ROOT` que está na linha de cima.
     """
-    if "CLAUDE_PLUGIN_ROOT" in linha:
-        return []
+    dentro = False
+    acumulado = []
+    numero_inicial = None
+    for numero, linha in enumerate(texto.split("\n"), start=1):
+        if CERCA.match(linha):
+            if acumulado:
+                yield numero_inicial, " ".join(acumulado), dentro
+                acumulado, numero_inicial = [], None
+            dentro = not dentro
+            continue
+        if numero_inicial is None:
+            numero_inicial = numero
+        if linha.rstrip().endswith("\\"):
+            acumulado.append(linha.rstrip()[:-1])
+            continue
+        acumulado.append(linha)
+        yield numero_inicial, " ".join(acumulado), dentro
+        acumulado, numero_inicial = [], None
+    if acumulado:
+        yield numero_inicial, " ".join(acumulado), dentro
+
+
+def scripts_sem_claude_plugin_root(texto, nomes_de_script):
+    """`(numero_da_linha, nome)` de cada script citado sem
+    `$CLAUDE_PLUGIN_ROOT`.
+
+    A regra decide pelo CONTEXTO, não por sinal na linha. A versão anterior
+    contava como referência só o nome precedido de `/` ou invocado com o
+    literal `python3`, e por isso deixava escapar `python contrato.py` (sem o
+    "3"), outro interpretador, um runner, ou o nome entre aspas. O contexto
+    não tem essa janela:
+
+      dentro de bloco cercado   é comando. Qualquer menção a script do plugin
+                                reprova — não há razão legítima para um bloco
+                                de comando citá-lo por outro caminho.
+      fora de bloco cercado     é prosa. Só a forma-caminho reprova (o nome
+                                precedido de `/`). Prosa que nomeia o script
+                                para explicá-lo — "as guardas de `guarda.py`
+                                leem..." — não é caminho relativo a projeto
+                                nenhum, e não é o defeito que a regra existe
+                                para pegar.
+    """
     achados = []
-    for nome in nomes_de_script:
-        if ("/" + nome) in linha or re.search(
-                r"python3\s+[\"']?\S*" + re.escape(nome), linha):
-            achados.append(nome)
+    for numero, conteudo, dentro_de_bloco in linhas_logicas(texto):
+        if "CLAUDE_PLUGIN_ROOT" in conteudo:
+            continue
+        for nome in sorted(nomes_de_script):
+            if dentro_de_bloco:
+                citado = nome in conteudo
+            else:
+                citado = ("/" + nome) in conteudo
+            if citado:
+                achados.append((numero, nome))
     return achados
 
 
@@ -233,14 +287,14 @@ class TestAgnostico(unittest.TestCase):
         achados = []
         for caminho in arquivos_md_do_plugin():
             with open(caminho, encoding="utf-8") as f:
-                linhas = f.read().split("\n")
-            for n, linha in enumerate(linhas, start=1):
-                for nome_script in scripts_sem_claude_plugin_root(
-                        linha, nomes_de_script):
-                    achados.append(
-                        "%s:%d cita %s sem $CLAUDE_PLUGIN_ROOT → %s" % (
-                            os.path.relpath(caminho, RAIZ), n, nome_script,
-                            linha.strip()))
+                texto = f.read()
+            linhas = texto.split("\n")
+            for numero, nome_script in scripts_sem_claude_plugin_root(
+                    texto, nomes_de_script):
+                achados.append(
+                    "%s:%d cita %s sem $CLAUDE_PLUGIN_ROOT → %s" % (
+                        os.path.relpath(caminho, RAIZ), numero, nome_script,
+                        linhas[numero - 1].strip()))
         self.assertEqual(achados, [], "\n".join([""] + achados))
 
     def test_todo_literal_md_casa_com_forma_da_propria_plugin(self):
@@ -270,6 +324,51 @@ class TestAgnostico(unittest.TestCase):
                            "nenhum .md encontrado em skills/, commands/ ou "
                            ".claude-plugin/ — os testes de invocação e de "
                            "allowlist passariam sem verificar nada")
+
+    def test_bloco_de_comando_pega_invocacao_sem_depender_do_interpretador(self):
+        # A janela de escape que esta regra fechou: ela decidia por sinal na
+        # linha — o nome precedido de `/`, ou o literal `python3`. Quem
+        # escrevesse `python` sem o "3", outro interpretador, um runner, ou o
+        # nome entre aspas, passava. Dentro de um bloco de comando não há
+        # razão legítima para citar script do plugin por outro caminho, então
+        # o interpretador deixou de importar.
+        for comando in ("python contrato.py",
+                        "sh contrato.py",
+                        "uv run contrato.py",
+                        '"contrato.py"',
+                        "contrato.py --raiz ."):
+            texto = "Rode assim:\n\n```sh\n%s\n```\n" % comando
+            self.assertTrue(
+                scripts_sem_claude_plugin_root(texto, scripts_da_plugin()),
+                "invocação em bloco de comando não foi pega: %r" % comando)
+
+    def test_prosa_que_so_nomeia_o_script_continua_passando(self):
+        # O falso positivo que motivou a troca original, e que a regra nova
+        # precisa continuar deixando passar: prosa que cita o script para
+        # explicá-lo não é caminho relativo a projeto nenhum.
+        texto = "As duas guardas de `guarda.py` leem `git status` antes.\n"
+        self.assertEqual(
+            scripts_sem_claude_plugin_root(texto, scripts_da_plugin()), [])
+
+    def test_prosa_com_forma_de_caminho_continua_sendo_pega(self):
+        # Fora de bloco, o que reprova é a forma-caminho — e ela tem que
+        # continuar reprovando, senão a troca teria aberto um buraco maior
+        # que o que fechou.
+        texto = "Rode `ferramentas/contrato.py` antes de gerar.\n"
+        self.assertTrue(
+            scripts_sem_claude_plugin_root(texto, scripts_da_plugin()))
+
+    def test_linha_continuada_herda_o_claude_plugin_root_da_primeira(self):
+        # Um comando quebrado em duas linhas com `\` é um comando só. Julgar
+        # a segunda linha sozinha acusaria um `$CLAUDE_PLUGIN_ROOT` que está
+        # ali, na linha de cima — falso positivo em cima do jeito certo de
+        # escrever.
+        texto = ('```sh\n'
+                 'cp "$CLAUDE_PLUGIN_ROOT/skills/dds/scripts/contrato.py" \\\n'
+                 '   ferramentas/contrato.py\n'
+                 '```\n')
+        self.assertEqual(
+            scripts_sem_claude_plugin_root(texto, scripts_da_plugin()), [])
 
     def test_nome_declarado_por_script_entra_na_allowlist_sozinho(self):
         # A regressão que este teste existe para pegar não é um nome de
